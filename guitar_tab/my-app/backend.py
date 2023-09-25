@@ -19,11 +19,12 @@ class Flask_api(object):
         self.tab_area = {'x':0,'y':0,'width':0,'height':0} # 使用者所選取得TAB範圍
         self.tab_image = []
         self.tab_base64 = []
+        self.tab_index_selected = []
 
         self.app.add_url_rule('/api/yt_url', endpoint='index',view_func=self.yt_url_update,methods=['POST']) # URL內容
         self.app.add_url_rule('/api/yt_image', endpoint='image',view_func=self.yt_image_update,methods=['GET']) # 圖片URL
         self.app.add_url_rule('/api/image_area_select', endpoint='area_select',view_func=self.area_select,methods=['POST']) # 圖片區域選擇
-        # self.app.add_url_rule('/api/tab_select', endpoint='tab_select',view_func=self.tab_select,methods=['GET']) # TAB選擇
+        self.app.add_url_rule('/api/tab_select', endpoint='tab_select',view_func=self.tab_select,methods=['POST']) # TAB選擇
 
 
     def run(self):
@@ -67,6 +68,16 @@ class Flask_api(object):
             self.tab_image = Video_calculate.tab_handle(self.yt_url,self.tab_area['x'],self.tab_area['y'],self.tab_area['width'],self.tab_area['height']) # 影像處理
             self.tab_base64 = self.img2base64(self.tab_image) # 轉成base64
             return self.tab_base64
+        
+    def tab_select(self,*args):
+        if request.method == "POST":
+            self.tab_index_selected = request.json
+            print(self.tab_index_selected)
+            full_image = Video_calculate.merge_tab(self.tab_index_selected,self.tab_image,self.yt_title)
+            print("================================")
+            print(len(full_image))
+            full_image = self.img2base64(full_image)
+        return full_image
         
     def img2base64(self,image_list):
         base64_images = []
@@ -171,7 +182,71 @@ class Video_calculate:
                 break
         print(type(concatenated_frame))
         return concatenated_frame
+    
+    def merge_tab(select_index,images,title):
+        for index in sorted(select_index, reverse=True): #將不必要的tab刪除
+            images.pop(index)
 
+        # 生成一個空白圖片 標題用
+        width = 1280
+        height = 171
+        image_title = Image.new('RGB',(width, height),color=(255,255,255))
+        draw = ImageDraw.Draw(image_title)
+        text = title
+        text_max = False
+
+        if len(text) > 70:
+            text1 = text[70:]
+            text = text[:70]
+            text_max = True
+
+        font = ImageFont.truetype("NotoSansTC-VariableFont_wght.ttf",40)
+        if text_max == False:
+            text_width,text_height = draw.textsize(text,font)
+            x = (width - text_width) // 2
+            y = (height - text_height) // 2
+            draw.text((x,y), text,font=font,fill=(0,0,0))
+
+        if text_max == True:
+            text_width,text_height = draw.textsize(text,font)
+            x = (width - text_width) // 2
+            y = 34.2 
+            draw.text((x,y), text,font=font,fill=(0,0,0))
+            text_width,text_height = draw.textsize(text1,font)
+            x = (width - text_width) // 2
+            y = 34.2 + text_height + 1
+            draw.text((x,y), text1,font=font,fill=(0,0,0))
+
+        image_np = np.array(image_title)
+        gray_frame = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
+        _, binary_frame = cv2.threshold(gray_frame, 230, 255, cv2.THRESH_BINARY)
+        image_np = cv2.resize(binary_frame,(width,height))
+
+
+        # 將合併的圖片長寬先統一
+        images.insert(0,image_np)
+        width, height = images[0].shape[1], images[0].shape[0]
+        for i in range(len(images)):
+            if images[i].shape[1] != width or images[i].shape[0] != height:
+                images[i] = cv2.resize(images[i], (width, height))
+        # if len(images) < 8:
+        #     result_frame = cv2.vconcat(images)
+        #     cv2.imwrite(f'{title}.jpg', result_frame)
+        #     return [result_frame]
+        # else:
+        result_frames = []
+        split_page = len(images)//8
+        result = np.array_split(images,split_page)
+  
+        print("================================")
+        print(result[0].shape)
+        print("================================")
+        for i in range(split_page):
+            
+            result_frame = cv2.vconcat(result[i])
+            # cv2.imwrite(f'{title}_{i+1}.jpg', result_frame)
+            result_frames.append(result_frame)
+        return result_frames
 
     
         
