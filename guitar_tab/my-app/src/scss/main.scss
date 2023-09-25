@@ -35,6 +35,14 @@
                     
                 // }
             }
+            .image-display {
+                display: flex;
+                flex-direction: column;
+            }
+            .tab-select {
+                display: flex;
+                flex-direction: column;
+            }
         }
     }
 
