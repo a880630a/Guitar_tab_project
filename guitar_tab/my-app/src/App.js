@@ -14,7 +14,10 @@ function App() {
   const [rectangle,setRectangle] = useState(null);
   const [tabImageUrl,setTabImageUrl] = useState([]);
   const [tabPage,setTabPage] = useState([]);
-  
+  const [fullTab,setFullTab] = useState([]);
+  console.log("target -> ",fullTab)
+  console.log("target 2-> ",tabPage)
+  console.log("target 3-> ",tabImageUrl)
   const urlUpdate = async (data) => {
     console.log("yturl come in");
     const Data = await axios.post("/api/yt_url",data);
@@ -45,6 +48,16 @@ function App() {
       
     }
   }
+  const postTabPage = async(data) =>{
+    const Data = await axios.post("/api/tab_select",data);
+    if (Data.status === 200) {
+      console.log("tab selected");
+      for (let i = 0; i < (Data.data).length; i++){
+        const fullBase64ToImage = `data:image/jpeg;base64,${Data.data[i]}`;
+        setFullTab(oldArray => [...oldArray, fullBase64ToImage]);
+      }
+    }
+  };
 
 
   return (
@@ -59,21 +72,56 @@ function App() {
                 <input type="url" id="typeURL" class="form-control" onChange={(event)=>{setYtUrl(event.target.value)}}/>
               </div>
               <button class="btn btn-primary" type="submit" onClick={()=>urlUpdate(ytUrl)}>Button</button>
+            </div>
+
+              {ytImageUrl ? 
               <div className="image-display">
                 <CanvasWithBackground imageUrl = {ytImageUrl} rectangle={rectangle} setRectangle={setRectangle}> 
                 </CanvasWithBackground>
+                <button class="btn btn-primary" type="submit" onClick={()=>postImageArea(rectangle)}>Button2</button>
               </div>
-              <button class="btn btn-primary" type="submit" onClick={()=>postImageArea(rectangle)}>Button2</button>
-              {tabImageUrl && tabImageUrl.map((data,index)=>(
-                <div className='tab-images'>
-                  <input type='checkbox' defaultChecked={true} value={index} onChange={(e)=>setTabPage(oldArray => [...oldArray, e.target.value])}></input>
-                  <img src={tabImageUrl[index]} alt="Image1" />
+              :
+              ""
+              }
+              
+              
+              {tabImageUrl.length !== 0 ? 
+                <div className="tab-select">
+                {tabImageUrl && tabImageUrl.map((data,index)=>(
+                  <div className='tab-images'>
+                    <input type='checkbox' 
+                      defaultChecked={true} 
+                      value={index} 
+                      onChange={(e)=>(e.target.checked === true ? 
+                      setTabPage((pre)=>pre.filter(prev=>prev !== index)):
+                      setTabPage(oldArray => [...oldArray, index]))}>
+                      {/*遍歷數組（或類似數據結構）的每個元素，並返回滿足特定條件的元素所組成的新數組*/}
+                    </input>
+                    <img src={tabImageUrl[index]} alt="Image1" />
+                  </div>
+                ))}
                 </div>
-              ))}
-            </div>
+              :
+              ""
+              }
+              
+
+              {fullTab.length !== 0 ? 
+                <div className="full-tab">
+                {fullTab && fullTab.map((data,index)=>(
+                  <div className='tab-images'>
+                    <img src={fullTab[index]} alt="Image2" />
+                  </div>
+                ))}
+                <button onClick={()=>postTabPage(tabPage)}>confirm</button>
+              </div>
+              :
+              ""
+              }
+              
+
+            
           </div>
-          
-          
         </div>
       </div>
     </div>
