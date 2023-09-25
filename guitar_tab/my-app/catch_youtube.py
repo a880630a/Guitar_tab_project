@@ -137,7 +137,7 @@ while True:
             print("第%s頁"%(__i))
             __i += 1
             concatenated_frame.append(binary_frame)
-            cv2.imshow(str(__i),binary_frame)
+            # cv2.imshow(str(__i),binary_frame)
             
         else:
             counter += 1
@@ -153,7 +153,7 @@ while True:
     
     
     # print(target.shape)
-    cv2.imshow('Video Frame', detect_area)
+    # cv2.imshow('Video Frame', detect_area)
 
     # 按下 'q' 鍵退出循環
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -165,7 +165,10 @@ while True:
 split_page = len(concatenated_frame)//8
 print("result",len(concatenated_frame))
 result = np.array_split(concatenated_frame,split_page)
+print("before array_split shape : ",concatenated_frame[0].shape)
+print("after -> ",result[0].shape)
 
-# for i in range(split_page):
-#     result_frame = cv2.vconcat(result[i])
-#     cv2.imwrite(f'{yt_name}_{i+1}.jpg', result_frame)
+for i in range(split_page):
+    print("shape : ",result[i].shape)
+    result_frame = cv2.vconcat(result[i])
+    cv2.imwrite(f'{yt_name}_{i+1}.jpg', result_frame)
