@@ -13,11 +13,18 @@ function CanvasWithBackground(props) {
       return;
     }
     const drawRect = canvas.getBoundingClientRect();
-    const x = e.clientX - drawRect.left;
-    const y = e.clientY - drawRect.top;
+    const scaleX = canvas.width / drawRect.width;
+    const scaleY = canvas.height / drawRect.height;
+    const x = (e.clientX - drawRect.left)*scaleX;
+    const y = (e.clientY - drawRect.top)*scaleY;
     setCursorPosition({positionX:x, positionY:y})
     setGoalPosition((data)=>({...data,startPositionX:x, startPositionY:y})) //單獨針對startPosition去做設定
-    console.log("before", cursorPosition);
+    console.log("drawRect", drawRect.width);
+    console.log("canvas", canvas.width);
+    
+    // console.log("not adjust", e.clientX);
+    console.log("adjust", cursorPosition);
+    
     setIsDrawing(true);
   };
 
@@ -26,15 +33,17 @@ function CanvasWithBackground(props) {
       return;
     }
     const drawRect = canvas.getBoundingClientRect();
-    const x = e.clientX - drawRect.left;
-    const y = e.clientY - drawRect.top;
+    const scaleX = canvas.width / drawRect.width;
+    const scaleY = canvas.height / drawRect.height;
+    const x = (e.clientX - drawRect.left)*scaleX;
+    const y = (e.clientY - drawRect.top)*scaleY;
     setCursorPosition({positionX:x, positionY:y})
     // setGoalPosition({endPositionX:x, endPositionY:y})
     setGoalPosition((data)=>({...data,endPositionX:x, endPositionY:y})) //單獨針對endPosition去做設定
     setIsDrawing(false);
   
-    console.log("after", cursorPosition);
-    console.log("!!!!=>", goalPosition);
+    // console.log("after", cursorPosition);
+    // console.log("!!!!=>", goalPosition);
   }
 
   const CursorMove = (e) =>{
@@ -42,8 +51,11 @@ function CanvasWithBackground(props) {
         return;
     }
     const drawRect = canvas.getBoundingClientRect();
-    const x = e.clientX - drawRect.left;
-    const y = e.clientY - drawRect.top;
+    const scaleX = canvas.width / drawRect.width;
+    const scaleY = canvas.height / drawRect.height;
+    const x = (e.clientX - drawRect.left)*scaleX;
+    const y = (e.clientY - drawRect.top)*scaleY;
+    
     setCursorPosition({positionX:x, positionY:y})
   };
 
@@ -59,20 +71,20 @@ function CanvasWithBackground(props) {
       // 在圖像加載完成後，設定 Canvas 的背景
       img.onload = () => {
         // 設定 Canvas 的寬高，以匹配圖像的寬高
+        
         canvas.width = img.width;
         canvas.height = img.height;
+
+
         
         // 繪製圖像作為 Canvas 的背景
         ctx.drawImage(img, 0, 0);
 
         if (rectangle) {
-            console.log("come in")
             ctx.strokeStyle = 'yellow';
             ctx.lineWidth = 3;
             ctx.strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
           }
-        
-
       };
     }
   }, [canvas, imageUrl,rectangle]);
