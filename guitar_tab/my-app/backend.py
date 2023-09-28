@@ -7,17 +7,18 @@ import time
 from PIL import Image,ImageDraw,ImageFont
 import matplotlib.pyplot as plt
 import base64
-
+from flask_socketio import SocketIO
 
 class Flask_api(object):
     def __init__(self):
         self.app = Flask(__name__) 
-
+        # self.socketio = SocketIO(self.app,cors_allowed_origins="*") #websocket
         self.yt_url = ""
         self.yt_title = ""
         self.yt_image = None
         self.tab_area = {'x':0,'y':0,'width':0,'height':0} # 使用者所選取得TAB範圍
         self.tab_image = []
+        self.completed_tab_image_send = False #是否完成tab image 的所以傳送
         self.tab_base64 = []
         self.tab_index_selected = []
 
@@ -26,16 +27,31 @@ class Flask_api(object):
         self.app.add_url_rule('/api/image_area_select', endpoint='area_select',view_func=self.area_select,methods=['POST']) # 圖片區域選擇
         self.app.add_url_rule('/api/tab_select', endpoint='tab_select',view_func=self.tab_select,methods=['POST']) # TAB選擇
 
+    # 使用 Socket.IO 建立 WebSocket 連線
+        # self.socketio.on_event('connect', self.handle_connect) #websocket
+
+    # def handle_connect(self): #websocket
+    #     print('WebSocket Client Connected')
+
+
+     # 向前端发送消息的方法 #websocket
+    # def send_message_to_frontend(message):
+    #     Flask_api.socketio.emit('message_from_backend', {'message': message})
+
 
     def run(self):
         CORS(self.app,supports_credentials=True)
         self.app.run(host="0.0.0.0", port=8877)
+        # self.socketio.run(self.app,host="0.0.0.0", port=8877) #websocket
 
 
     def yt_url_update(self,*args):
         if request.method == 'POST':
+            
             if type(request.json) is str:
+                print("!!!!!!!come in POST")
                 self.yt_url = request.json
+
             print('YT URL :',self.yt_url)
             self.yt_title = Video_calculate.get_youtube_title(self.yt_url)
             print("YT Title :",self.yt_title)
@@ -165,6 +181,7 @@ class Video_calculate:
                 if counter >= 2:
                     counter = 0
                     print("第%s頁"%(__i))
+                    # Flask_api.send_message_to_frontend(__i) #websocket
                     __i += 1
                     concatenated_frame.append(binary_frame)
                     # cv2.imshow(str(__i),binary_frame)
