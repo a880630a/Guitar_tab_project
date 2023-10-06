@@ -117,7 +117,6 @@ function App() {
               ""
               }
               
-              
               {tabImageUrl.length !== 0 ? 
                 <div className="tab-select">
                 {tabImageUrl && tabImageUrl.map((data,index)=>(
@@ -132,7 +131,9 @@ function App() {
                     </input>
                     <img src={tabImageUrl[index]} alt="Image1" />
                   </div>
+                  
                 ))}
+                <button onClick={()=>postTabPage(tabPage)}>confirm</button>
                 </div>
               :
               ""
@@ -146,7 +147,7 @@ function App() {
                     <img src={fullTab[index]} alt="Image2" />
                   </div>
                 ))}
-                <button onClick={()=>postTabPage(tabPage)}>confirm</button>
+                
               </div>
               :
               ""
