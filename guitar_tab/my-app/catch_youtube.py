@@ -7,8 +7,8 @@ from PIL import Image,ImageDraw,ImageFont
 
 
 ################################################################
-
-url = "https://www.youtube.com/watch?v=xQeTnbcCvLQ"
+url = "https://www.youtube.com/watch?v=eqFow268Wp8" # seven
+# url = "https://www.youtube.com/watch?v=xQeTnbcCvLQ" # love story
 yt = YouTube(url)
 yt_name = yt.title
 
@@ -65,6 +65,7 @@ previous_frame_diff = 0
 last_time = 0
 __i = 1
 counter = 0
+in_judge = False
 
 
 start_time = time.time()
@@ -87,6 +88,8 @@ print("start : ",start_time)
 #         area = cv2.selectROI('area',frame)
 #         print(area)
 
+now_time = time.time()
+frame_counter = 0
 
 while True:
     ret, frame = video_capture.read()  # 讀取一個幀
@@ -120,32 +123,86 @@ while True:
     if previous_frame_sum is None:
         previous_frame_sum = current_frame_sum
         continue
-
+        
+    
     # 計算當前幀的差異度
     frame_difference = np.abs(current_frame_sum - previous_frame_sum)
     print(frame_difference)
-    
-    
-    if frame_difference > 1000000:
-        current_time = 1
-    else:
-        current_time = 0
 
-    if current_time != last_time :
-        if counter >= 2:
-            counter = 0
-            print("第%s頁"%(__i))
-            __i += 1
-            concatenated_frame.append(binary_frame)
-            # cv2.imshow(str(__i),binary_frame)
+    
+
+    
+    # cv2.imshow("detect area -> ",detect_area)
+
+    previous_frame_sum = current_frame_sum # 上一幀與前一幀比較
+# =======================新演算法==========================================
+    
+    if in_judge == True:
+        counter += 1
+        if counter > 9:
+            if frame_counter == 2: #10筆內容裡面有3筆以上>1000000000，判斷為換頁
+                counter = 0
+                frame_counter = 0
+                in_judge = False
+                print("第%s頁"%(__i))
+                __i += 1
+                cv2.imshow(str(__i),binary_frame)
+                concatenated_frame.append(binary_frame)
+            else:
+                in_judge = False
+                counter = 0
+                frame_counter = 0
+
+        if frame_difference > 1000000000:
+           frame_counter +=  1
+
+    elif frame_difference > 1000000000:
+        in_judge = True
+# =======================新演算法==========================================
+
+    # if frame_difference > 1000000000:
+    #     if time.time() < now_time + 0.03:
+    #         in_judge = True
+    #         counter += 1
+    #     else:
+    #         counter = 1
+    #         in_judge = False
+    #         now_time = time.time()
+
+    # if in_judge == True:
+    #     if counter > 2:
+    #         counter = 0
+    #         in_judge = False
+    #         now_time = time.time()
+    #         print("第%s頁"%(__i))
+    #         __i += 1
+    #         # cv2.imshow(str(__i),binary_frame)
+    #         concatenated_frame.append(binary_frame)
+        
+        
+
+        
+    #================================================================
+    # if frame_difference > 1000000:
+    #     current_time = 1
+    # else:
+    #     current_time = 0
+
+    # if current_time != last_time :
+    #     if counter >= 2:
+    #         counter = 0
+    #         print("第%s頁"%(__i))
+    #         __i += 1
+    #         concatenated_frame.append(binary_frame)
+    #         # cv2.imshow(str(__i),binary_frame)
             
-        else:
-            counter += 1
-            last_time = current_time
+    #     else:
+    #         counter += 1
+    #         last_time = current_time
 
-    else:
-        pass
-    
+    # else:
+    #     pass
+    #================================================================
 
 
 
@@ -161,14 +218,15 @@ while True:
     if cv2.waitKey(1) == ord('r'):
         area = cv2.selectROI('area',frame)
         print(area)
-
+    # time.sleep(0.1)
+    
 split_page = len(concatenated_frame)//8
 print("result",len(concatenated_frame))
 result = np.array_split(concatenated_frame,split_page)
 print("before array_split shape : ",concatenated_frame[0].shape)
 print("after -> ",result[0].shape)
 
-for i in range(split_page):
-    print("shape : ",result[i].shape)
-    result_frame = cv2.vconcat(result[i])
-    cv2.imwrite(f'{yt_name}_{i+1}.jpg', result_frame)
+# for i in range(split_page):
+#     print("shape : ",result[i].shape)
+#     result_frame = cv2.vconcat(result[i])
+#     cv2.imwrite(f'{yt_name}_{i+1}.jpg', result_frame)
