@@ -142,6 +142,8 @@ class Video_calculate:
         last_time = 0
         __i = 1
         counter = 0
+        frame_counter = 0
+        in_judge = False
 
 
         start_time = time.time()
@@ -164,34 +166,60 @@ class Video_calculate:
             gray_frame = cv2.cvtColor(target, cv2.COLOR_BGR2GRAY)
             _, binary_frame = cv2.threshold(gray_frame, 230, 255, cv2.THRESH_BINARY)
 
+            # cv2.imshow("detect_area",detect_area)
             # 計算區域差異度
             current_frame_sum = np.sum(detect_area) 
             if previous_frame_sum is None:
                 previous_frame_sum = current_frame_sum
                 continue
             frame_difference = np.abs(current_frame_sum - previous_frame_sum)
-            # print(frame_difference)
+            print(frame_difference)
 
-            if frame_difference > 1000000:
-                current_time = 1
-            else:
-                current_time = 0
+            # if frame_difference > 1000000:
+            #     current_time = 1
+            # else:
+            #     current_time = 0
 
-            if current_time != last_time :
-                if counter >= 2:
-                    counter = 0
-                    print("第%s頁"%(__i))
-                    # Flask_api.send_message_to_frontend(__i) #websocket
-                    __i += 1
-                    concatenated_frame.append(binary_frame)
-                    # cv2.imshow(str(__i),binary_frame)
+            # if current_time != last_time :
+            #     if counter >= 2:
+            #         counter = 0
+            #         print("第%s頁"%(__i))
+            #         # Flask_api.send_message_to_frontend(__i) #websocket
+            #         __i += 1
+            #         concatenated_frame.append(binary_frame)
+            #         # cv2.imshow(str(__i),binary_frame)
                     
-                else:
-                    counter += 1
-                    last_time = current_time
+            #     else:
+            #         counter += 1
+            #         last_time = current_time
 
-            else:
-                pass
+            # else:
+            #     pass
+            
+        # =======================新演算法==========================================
+            previous_frame_sum = current_frame_sum # 上一幀與前一幀比較
+            if in_judge == True:
+                counter += 1
+                if counter > 9:
+                    if frame_counter == 2: #10筆內容裡面有3筆以上>1000000000，判斷為換頁
+                        counter = 0
+                        frame_counter = 0
+                        in_judge = False
+                        print("第%s頁"%(__i))
+                        __i += 1
+                        # cv2.imshow(str(__i),binary_frame)
+                        concatenated_frame.append(binary_frame)
+                    else:
+                        in_judge = False
+                        counter = 0
+                        frame_counter = 0
+
+                if frame_difference > 1000000000:
+                    frame_counter +=  1
+
+            elif frame_difference > 1000000000:
+                in_judge = True
+        # =======================新演算法==========================================
 
             if not ret:
                 break
